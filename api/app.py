@@ -106,59 +106,7 @@ def get_all_medicamentos():
         print(e.__str__())
         return {"message": error_msg}, 400
 
-@app.put('/consome_medicamento',tags=[medicamento_tag])
-def consume_quantity(form: MedicamentoConsomeRepoeQtdadeSchema):
-    """Decrementa (consome) a quantidade de um dado medicamento
-    """
-    try:
-        # criando conexão com o banco
-        session = Session()
-        # buscando todas as instâncias ativas
-        medicamento = session.query(Medicamento).filter(Medicamento.is_active == True, Medicamento.medicament_id == form.id).first()
-
-        if not medicamento:
-            error_msg = 'Nenhum medicamento encontrado com o id'
-            return {"message": error_msg},404
-        else:
-            if form.consumed_refilled_quantity > medicamento.quantity:
-                error_msg = "Estoque insuficiente para consumo dessa quantidade de medicamento"
-                return {"message": error_msg}, 400 
-            else:
-                #decrementa a quantidade e retorna
-                medicamento.quantity-=form.consumed_refilled_quantity            
-                session.commit()
-                return apresenta_medicamento(medicamento), 200
-    except Exception as e:
-        error_msg = "Não foi possível realizar o consumo de medicamento"
-        return {"message": error_msg}, 400
-
-@app.put('/repoe_medicamento',tags=[medicamento_tag])
-def replace_quantity(form: MedicamentoConsomeRepoeQtdadeSchema):
-    """Aumenta (repoe) a quantidade de um dado medicamento
-    """
-    try:
-        # criando conexão com o banco
-        session = Session()
-        # buscando todas as instâncias ativas
-        medicamento = session.query(Medicamento).filter(Medicamento.is_active == True, Medicamento.medicament_id == form.id).first()
-
-        if not medicamento:
-            error_msg = 'Nenhum medicamento encontrado com o id'
-            return {"message": error_msg},404
-        else:            
-            #aumenta a quantidade e retorna
-            medicamento.quantity+=form.consumed_refilled_quantity            
-            session.commit()
-            return apresenta_medicamento(medicamento), 200
-    except Exception as e:
-        error_msg = "Não foi possível realizar a reposicao de medicamento"
-        return {"message": error_msg}, 400
-
-@app.put('/repoe_medicamentos',tags=[medicamento_tag])
-def replace_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema):
-    """Aumenta (repoe) a quantidade de um ou mais medicamentos
-    """
-
+def change_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema,is_refilling: bool):
     try:
         #print(request.get_json())
         print(body)
@@ -189,14 +137,110 @@ def replace_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema):
                 if el.id in medicamentos_dict:
                     print(el.id)
                     medicamento = medicamentos_dict[el.id]
-                    # Aumenta a quantidade de acordo com o formulário
-                    medicamento.quantity += el.consumed_refilled_quantity          
+                    # Aumenta ou diminui a quantidade de acordo com o formulário
+                    if is_refilling:
+                        medicamento.quantity += el.consumed_refilled_quantity
+                    else:
+                        medicamento.quantity -= el.consumed_refilled_quantity
             session.commit()
             return apresenta_medicamentos(list(medicamentos_dict.values())), 200
     except Exception as e:
         print(e.__str__())
-        error_msg = "Não foi possível realizar a reposicao de medicamento"
+        error_msg = "Não foi possível realizar a reposicao/consumo de medicamento"
         return {"message": error_msg}, 400
+
+@app.put('/consome_medicamentos',tags=[medicamento_tag])
+def consume_quantity(body: MedicamentoListConsomeRepoeQtdadeSchema):
+    """Decrementa (consome) a quantidade de um ou mais medicamento
+    """
+    return change_quantities(body=body,is_refilling=False)
+    # try:
+    #     # criando conexão com o banco
+    #     session = Session()
+    #     # buscando todas as instâncias ativas
+    #     medicamento = session.query(Medicamento).filter(Medicamento.is_active == True, Medicamento.medicament_id == form.id).first()
+
+    #     if not medicamento:
+    #         error_msg = 'Nenhum medicamento encontrado com o id'
+    #         return {"message": error_msg},404
+    #     else:
+    #         if form.consumed_refilled_quantity > medicamento.quantity:
+    #             error_msg = "Estoque insuficiente para consumo dessa quantidade de medicamento"
+    #             return {"message": error_msg}, 400 
+    #         else:
+    #             #decrementa a quantidade e retorna
+    #             medicamento.quantity-=form.consumed_refilled_quantity            
+    #             session.commit()
+    #             return apresenta_medicamento(medicamento), 200
+    # except Exception as e:
+    #     error_msg = "Não foi possível realizar o consumo de medicamento"
+    #     return {"message": error_msg}, 400
+
+# @app.put('/repoe_medicamento',tags=[medicamento_tag])
+# def replace_quantity(form: MedicamentoConsomeRepoeQtdadeSchema):
+#     """Aumenta (repoe) a quantidade de um dado medicamento
+#     """
+#     try:
+#         # criando conexão com o banco
+#         session = Session()
+#         # buscando todas as instâncias ativas
+#         medicamento = session.query(Medicamento).filter(Medicamento.is_active == True, Medicamento.medicament_id == form.id).first()
+
+#         if not medicamento:
+#             error_msg = 'Nenhum medicamento encontrado com o id'
+#             return {"message": error_msg},404
+#         else:            
+#             #aumenta a quantidade e retorna
+#             medicamento.quantity+=form.consumed_refilled_quantity            
+#             session.commit()
+#             return apresenta_medicamento(medicamento), 200
+#     except Exception as e:
+#         error_msg = "Não foi possível realizar a reposicao de medicamento"
+#         return {"message": error_msg}, 400
+
+@app.put('/repoe_medicamentos',tags=[medicamento_tag])
+def replace_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema):
+    """Aumenta (repoe) a quantidade de um ou mais medicamentos
+    """
+    return change_quantities(body=body,is_refilling=True)
+    # try:
+    #     #print(request.get_json())
+    #     print(body)
+    #     print(body.medicamentos)
+    #     #pegando todos os ids
+    #     list_ids = [obj.id for obj in body.medicamentos]
+    #     print(list_ids)
+    #     # criando conexão com o banco
+    #     session = Session()
+    #     # buscando todas as instâncias ativas
+    #     medicamentos = session.query(Medicamento).filter(Medicamento.is_active == True, Medicamento.medicament_id.in_(list_ids)).all()        
+
+    #     if not medicamentos:
+    #         error_msg = 'Nenhum medicamento encontrado com o id'
+    #         return {"message": error_msg},404
+    #     else:            
+    #         # Criando um dicionário para mapear IDs de medicamentos para as instâncias correspondentes
+    #         medicamentos_dict = {medicamento.medicament_id: medicamento for medicamento in medicamentos}
+            
+    #         if len(medicamentos_dict) != len(list_ids):
+    #             # Nem todos os medicamentos foram encontrados
+    #             missing_ids = set(list_ids) - set(medicamentos_dict.keys())
+    #             error_msg = f'Medicamentos não encontrados para os IDs: {missing_ids}'
+    #             return {"message": error_msg}, 404
+
+    #         print('chegou aqui')
+    #         for el in body.medicamentos:
+    #             if el.id in medicamentos_dict:
+    #                 print(el.id)
+    #                 medicamento = medicamentos_dict[el.id]
+    #                 # Aumenta a quantidade de acordo com o formulário
+    #                 medicamento.quantity += el.consumed_refilled_quantity          
+    #         session.commit()
+    #         return apresenta_medicamentos(list(medicamentos_dict.values())), 200
+    # except Exception as e:
+    #     print(e.__str__())
+    #     error_msg = "Não foi possível realizar a reposicao de medicamento"
+    #     return {"message": error_msg}, 400
     
 
 @app.delete('/delete_medicamento',tags=[medicamento_tag])
@@ -214,7 +258,11 @@ def delete_medicamento(form: MedicamentoBuscaIDSchema):
             return {"message": error_msg},404
         else:
             #busca as prescricoes associadas ao medicamento
-            response = requests.get(f'http://127.0.0.1:5002/prescricao_medicamento?id={form.id}')
+            try:
+                response = requests.get(f'http://127.0.0.1:5002/prescricao_medicamento?id={form.id}')
+            except Exception as e:
+                error_msg = "Serviço de consulta a prescrição inacessível"
+                return {"message": error_msg}, 400
 
             if response.status_code == 404:
                 #se não tem nenhuma prescrição associada, pode seguir com a deleção do medicamento
@@ -229,7 +277,11 @@ def delete_medicamento(form: MedicamentoBuscaIDSchema):
                 #monta o payload de delecao de prescricao
                 payload = {'ids': [{'id': prescricao['id']} for prescricao in prescricoes]}
                 
-                response = requests.delete('http://127.0.0.1:5002/delete_prescricoes',data=json.dumps(payload),headers=headers)
+                try:
+                    response = requests.delete('http://127.0.0.1:5002/delete_prescricoes',data=json.dumps(payload),headers=headers)
+                except Exception as e:
+                    error_msg = "Serviço de deleção de prescrição inacessível"
+                    return {"message": error_msg}, 400
                 
                 if response.status_code != 200:
                     error_msg = "Não foi possível realizar a deleção do medicamento por causa das prescricoes associadas"
