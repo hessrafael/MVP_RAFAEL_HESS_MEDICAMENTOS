@@ -26,7 +26,8 @@ def home():
     """
     return redirect('/openapi')
 
-@app.post('/medicamento',tags=[medicamento_tag])
+@app.post('/medicamento',tags=[medicamento_tag],
+          responses={"200":MedicamentoViewSchema,"400":ErrorSchema, "409":ErrorSchema})
 def add_medicamento(form: MedicamentoSchema):
     """Adiciona um novo medicamento à base   
     """    
@@ -65,7 +66,8 @@ def add_medicamento(form: MedicamentoSchema):
         print(type(e))
         return {"message": error_msg}, 400
 
-@app.get('/medicamento', tags=[medicamento_tag])
+@app.get('/medicamento', tags=[medicamento_tag],
+         responses={"200":MedicamentoViewSchema,"400":ErrorSchema, "404":ErrorSchema})
 def get_medicamento(query: MedicamentoBuscaIDSchema):
     """Retorna medicamento pelo seu id
     """
@@ -85,7 +87,8 @@ def get_medicamento(query: MedicamentoBuscaIDSchema):
         error_msg = "Não foi possível realizar a consulta de medicamento"
         return {"message": error_msg}, 400
 
-@app.get('/all_medicamentos',tags=[medicamento_tag])
+@app.get('/all_medicamentos',tags=[medicamento_tag],
+         responses={"200":MedicamentoListViewSchema,"400":ErrorSchema, "404":ErrorSchema})
 def get_all_medicamentos():
     """Retorna todos os medicamentos cadastrados no banco
     """
@@ -149,7 +152,8 @@ def change_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema,is_refilling
         error_msg = "Não foi possível realizar a reposicao/consumo de medicamento"
         return {"message": error_msg}, 400
 
-@app.put('/consome_medicamentos',tags=[medicamento_tag])
+@app.put('/consome_medicamentos',tags=[medicamento_tag],
+         responses={"200":MedicamentoListViewSchema,"400":ErrorSchema, "404":ErrorSchema})
 def consume_quantity(body: MedicamentoListConsomeRepoeQtdadeSchema):
     """Decrementa (consome) a quantidade de um ou mais medicamento
     """
@@ -198,7 +202,8 @@ def consume_quantity(body: MedicamentoListConsomeRepoeQtdadeSchema):
 #         error_msg = "Não foi possível realizar a reposicao de medicamento"
 #         return {"message": error_msg}, 400
 
-@app.put('/repoe_medicamentos',tags=[medicamento_tag])
+@app.put('/repoe_medicamentos',tags=[medicamento_tag],
+         responses={"200":MedicamentoListViewSchema,"400":ErrorSchema, "404":ErrorSchema})
 def replace_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema):
     """Aumenta (repoe) a quantidade de um ou mais medicamentos
     """
@@ -243,7 +248,8 @@ def replace_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema):
     #     return {"message": error_msg}, 400
     
 
-@app.delete('/delete_medicamento',tags=[medicamento_tag])
+@app.delete('/delete_medicamento',tags=[medicamento_tag],
+            responses={"200":MedicamentoViewSchema,"400":ErrorSchema, "404":ErrorSchema})
 def delete_medicamento(form: MedicamentoBuscaIDSchema):
     """Deleta um medicamento pelo seu ID
     """
