@@ -68,3 +68,14 @@ automaticamente após uma mudança no código fonte.
 
 Abra o [http://localhost:5001/#/](http://localhost:5001/#/) no navegador para verificar o status da API em execução.
 
+---
+## Executando os testes funcionais
+
+Para executar os testes funcionais, esteja com o ambiente virtual ativo
+
+Navegue até o diretório ".\api" e execute:
+
+```
+(env)$ python -m pytest -v --disable-warnings
+```
+
