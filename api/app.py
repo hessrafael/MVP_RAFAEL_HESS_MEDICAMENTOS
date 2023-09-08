@@ -34,12 +34,12 @@ def add_medicamento(form: MedicamentoSchema):
     
     try:
         medicamento = Medicamento(
-            brand=form.brand,
-            active_ingredient=form.active_ingredient,
-            dosage=form.dosage,
-            dosage_unit=DosageUnits(form.dosage_unit),
-            presentation=Presentation(form.presentation),
-            quantity=form.quantity
+            brand=form.marca,
+            active_ingredient=form.principio_ativo,
+            dosage=form.dosagem,
+            dosage_unit=DosageUnits(form.unidade_dosagem),
+            presentation=Presentation(form.apresentacao),
+            quantity=form.quantidade
         )
     except:
         error_msg = "Valores inválidos de parametros para nova instância de Medicamento"
@@ -96,7 +96,7 @@ def get_all_medicamentos():
         # criando conexão com o banco
         session = Session()
         # buscando todas as instâncias ativas
-        medicamentos = session.query(Medicamento).filter(Medicamento.is_active == True).all()
+        medicamentos = session.query(Medicamento).filter(Medicamento.is_active == True).order_by(Medicamento.created_at.asc()).all()
 
         if not medicamentos:
             error_msg = 'Nenhum medicamento encontrado'
@@ -120,7 +120,7 @@ def change_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema,is_refilling
         # criando conexão com o banco
         session = Session()
         # buscando todas as instâncias ativas
-        medicamentos = session.query(Medicamento).filter(Medicamento.is_active == True, Medicamento.medicament_id.in_(list_ids)).all()        
+        medicamentos = session.query(Medicamento).filter(Medicamento.is_active == True, Medicamento.medicament_id.in_(list_ids)).order_by(Medicamento.created_at.asc()).all()        
 
         if not medicamentos:
             error_msg = 'Nenhum medicamento encontrado com o id'
@@ -137,12 +137,17 @@ def change_quantities(body: MedicamentoListConsomeRepoeQtdadeSchema,is_refilling
 
             print('chegou aqui')
             for el in body.medicamentos:
-                if el.id in medicamentos_dict:
-                    print(el.id)
-                    medicamento = medicamentos_dict[el.id]
-                    # Aumenta ou diminui a quantidade de acordo com o formulário
-                    if is_refilling:
-                        medicamento.quantity += el.consumed_refilled_quantity
+                print(el.id)
+                # Recupera o medicamento com base no id
+                medicamento = medicamentos_dict[el.id]
+                # Aumenta ou diminui a quantidade de acordo com o formulário
+                if is_refilling:
+                    medicamento.quantity += el.consumed_refilled_quantity
+                else:
+                    if el.consumed_refilled_quantity > medicamento.quantity:
+                        # Retorna erro se o consumo for maior que o estoque para qualquer um dos medicamentos
+                        error_msg = f'Consumo do medicamento {el.id} maior que a quantidade em estoque. Nenhum consumo realizado, tente novamente'
+                        return {"message": error_msg}, 400
                     else:
                         medicamento.quantity -= el.consumed_refilled_quantity
             session.commit()

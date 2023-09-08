@@ -5,23 +5,23 @@ from models.medicamento import Medicamento
 class MedicamentoSchema(BaseModel):
     """ Define como um Medicamento novo deve ser adicionado
     """
-    brand : str = 'Tylenol'
-    active_ingredient : str = 'Paracetamol'
-    dosage : int = 700
-    dosage_unit : str = 'mg'
-    presentation : str = 'comprimido'
-    quantity : int = 10
+    marca : str = 'Tylenol'
+    principio_ativo : str = 'Paracetamol'
+    dosagem : int = 700
+    unidade_dosagem : str = 'mg'
+    apresentacao : str = 'comprimido'
+    quantidade : int = 10
 
 class MedicamentoViewSchema(BaseModel):
     """ Define como um Medicamento deve ser retornado
     """
     id: str = '206b887e-5465-4e47-b239-17ccc6ebcefa'
-    brand : str = 'Tylenol'
-    active_ingredient : str = 'Paracetamol'
-    dosage : int = 700
-    dosage_unit : str = 'mg'
-    presentation : str = 'comprimido'
-    quantity : int = 10
+    marca : str = 'Tylenol'
+    principio_ativo : str = 'Paracetamol'
+    dosagem : int = 700
+    unidade_dosagem : str = 'mg'
+    apresentacao : str = 'comprimido'
+    quantidade : int = 10
 
 class MedicamentoListViewSchema(BaseModel):
     """Define como uma Lista de Medicamento deve ser retornada
