@@ -11,6 +11,7 @@ from models import Session, Medicamento, DosageUnits, Presentation
 from schemas import *
 from flask_cors import CORS
 import datetime
+import os
 
 info = Info(title="API gestão Medicamentos", version="1.0.0")
 app = OpenAPI(__name__, info=info)
@@ -19,6 +20,13 @@ CORS(app)
 # definindo tags
 home_tag = Tag(name="Documentação", description="Seleção de documentação: Swagger, Redoc ou RapiDoc")
 medicamento_tag = Tag(name="Medicamento", description="Adição, visualização e remoção de Medicamentos à base")
+
+# definindo o host conforme o tipo de execução
+if os.getenv("DOCKER_ENV") == "true":
+    HOST = 'proc-cont'
+else:
+    HOST = '127.0.0.1'
+
 
 @app.get('/', tags=[home_tag])
 def home():
@@ -177,7 +185,7 @@ def delete_medicamento(form: MedicamentoBuscaIDSchema):
         else:
             #busca as prescricoes associadas ao medicamento
             try:
-                response = requests.get(f'http://127.0.0.1:5002/prescricao_medicamento?id={form.id}')
+                response = requests.get(f'http://{HOST}:5002/prescricao_medicamento?id={form.id}')
             except Exception as e:
                 error_msg = "Serviço de consulta a prescrição inacessível"
                 return {"message": error_msg}, 400
@@ -195,7 +203,7 @@ def delete_medicamento(form: MedicamentoBuscaIDSchema):
                 payload = {'ids': [{'id': prescricao['id']} for prescricao in prescricoes]}
                 
                 try:
-                    response = requests.delete('http://127.0.0.1:5002/delete_prescricoes',data=json.dumps(payload),headers=headers)
+                    response = requests.delete(f'http://{HOST}:5002/delete_prescricoes',data=json.dumps(payload),headers=headers)
                 except Exception as e:
                     error_msg = "Serviço de deleção de prescrição inacessível"
                     return {"message": error_msg}, 400
